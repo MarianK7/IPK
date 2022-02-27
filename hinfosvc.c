@@ -18,7 +18,7 @@ float GetCPULoad()
 
     fscanf(fp, "%ls %d %d %d %d %d %d %d %d %d", &a[0], &a[1], &a[2], &a[3], &a[4], &a[5], &a[6], &a[7], &a[8], &a[9]);
 
-    //printf("Read String1 |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d|\n", a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
+    // printf("Read String1 |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d|\n", a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
 
     fclose(fp);
 
@@ -28,7 +28,7 @@ float GetCPULoad()
 
     fscanf(fp, "%ls %d %d %d %d %d %d %d %d %d", &b[0], &b[1], &b[2], &b[3], &b[4], &b[5], &b[6], &b[7], &b[8], &b[9]);
 
-    //printf("Read String2 |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d|\n", b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9]);
+    // printf("Read String2 |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d|\n", b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9]);
 
     fclose(fp);
 
@@ -43,16 +43,16 @@ float GetCPULoad()
     int totald = Total - PrevTotal;
     int idled = Idle - PrevIdle;
 
-    //printf("Totald; %d\n", totald);
-    //printf("Total; %d\n", totald - idled);
+    // printf("Totald; %d\n", totald);
+    // printf("Total; %d\n", totald - idled);
 
     // float CPUusage = ((totald - idled) / totald) * 100;
     float res1 = totald - idled;
-    //printf("res1: %f \n", res1);
+    // printf("res1: %f \n", res1);
     float res2 = res1 / totald;
-    //printf("res2: %f \n", res2);
+    // printf("res2: %f \n", res2);
     float final = res2 * 100;
-    //printf("final: %f \n", final);
+    // printf("final: %f \n", final);
 
     // printf("CPUusage: %f \n", CPUusage);
 
@@ -84,20 +84,28 @@ void GetCpuName()
     {
         printf("%s", name);
     }
-    
+
     fclose(fp);
 }
 
 int main(int argc, char *argv[])
 {
-    char *port = "8000";
+
+    int server_fd, new_socket, valread;
+    int opt = 1;
+    struct sockaddr_in address;
+    int addrlen = sizeof(address);
+    char buffer[1024] = {0};
+    char *message = "do not disturb";
+
+    int port = 8000;
     if (argc > 1)
     {
-        port = argv[1];
-        printf("Port: %s\n", port);
+        port = atoi(argv[1]);
+        printf("Port: %d\n", port);
     }
     else
-        printf("No port was selected");
+        printf("No port was selected\n");
 
     float cpu = GetCPULoad();
     int cpu2 = cpu;
@@ -106,4 +114,49 @@ int main(int argc, char *argv[])
 
     GetHostName();
     GetCpuName();
+
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == 0)
+    {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(port);
+
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+    {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    puts("bind done");
+
+    if (listen(server_fd, 3) < 0)
+    {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    puts("Waiting for incoming connections...");
+
+    while (1)
+    {
+        puts("Waiting for incoming connections...");
+        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+        {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+        valread = read(new_socket, buffer, 1024);
+        printf("%s\n", buffer);
+        send(new_socket, message, strlen(message), 0);
+        puts("Connection accepted");
+    }
+
+    return 0;
 }
