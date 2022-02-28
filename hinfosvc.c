@@ -59,35 +59,6 @@ float GetCPULoad()
     return final;
 }
 
-void GetHostName()
-{
-    FILE *fp;
-    char name[20];
-
-    fp = fopen("/proc/sys/kernel/hostname", "r");
-
-    fscanf(fp, "%s", name);
-
-    printf("Hostname: %s\n", name);
-
-    fclose(fp);
-}
-
-void GetCpuName()
-{
-    FILE *fp;
-    char name[1024];
-
-    fp = popen("cat /proc/cpuinfo | grep 'model name' | head -n 1 | awk -F: '{print $2}'", "r");
-
-    if (fgets(name, 1024, fp) != NULL)
-    {
-        printf("%s", name);
-    }
-
-    fclose(fp);
-}
-
 int main(int argc, char *argv[])
 {
 
@@ -96,24 +67,61 @@ int main(int argc, char *argv[])
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
-    char *message = "do not disturb";
+    char *HostNameReq = "GET /hostname";
+    char *CPUNameReq = "GET /cpu-name";
+    char *LoadReq = "GET /load";
+    char *Error = "400 Bad Request\n";
+    char Load[5];
+    float cpu = GetCPULoad();
+    int cpu2 = cpu;
+    char daco[2] = "%";
+    char http[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    char http1[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    char http2[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    char http3[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    sprintf(Load, "%d", cpu2);
+    strcat(Load, daco);
+    strcat(Load, "\n");
+    strcat(http2, Load);
+    strcat(http3, Error);
+
+    /********************************************************Hostname********************************************************************************/
+    FILE *fp;
+    char Hostname[20];
+
+    fp = fopen("/proc/sys/kernel/hostname", "r");
+
+    fscanf(fp, "%s", Hostname);
+
+    fclose(fp);
+    /****************************************************************************************************************************************/
+
+    /********************************************************CPUname********************************************************************************/
+    FILE *fpp;
+    char CPUname[1024];
+
+    fpp = popen("cat /proc/cpuinfo | grep 'model name' | head -n 1 | awk -F: '{print $2}'", "r");
+
+    fgets(CPUname, 1024, fpp);
+
+    fclose(fpp);
+    /****************************************************************************************************************************************/
+
+    strcat(Hostname, "\n");
+    strcat(http1, CPUname);
+    strcat(http, Hostname);
+    // strcat(CPUname, "\n");
 
     int port = 8000;
     if (argc > 1)
     {
         port = atoi(argv[1]);
-        printf("Port: %d\n", port);
+        // printf("Port: %d\n", port);
     }
     else
+    {
         printf("No port was selected\n");
-
-    float cpu = GetCPULoad();
-    int cpu2 = cpu;
-    printf("Usage int: %d%% \n", cpu2);
-    printf("Usage: %f%% \n", cpu);
-
-    GetHostName();
-    GetCpuName();
+    }
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == 0)
     {
@@ -135,27 +143,49 @@ int main(int argc, char *argv[])
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
-    puts("bind done");
 
     if (listen(server_fd, 3) < 0)
     {
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    puts("Waiting for incoming connections...");
 
     while (1)
     {
-        puts("Waiting for incoming connections...");
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
         {
             perror("accept");
             exit(EXIT_FAILURE);
         }
-        valread = read(new_socket, buffer, 1024);
-        printf("%s\n", buffer);
-        send(new_socket, message, strlen(message), 0);
-        puts("Connection accepted");
+
+        if ((valread = read(new_socket, buffer, 1024)) < 0)
+        {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+
+        int HostNameCompare = strncmp(buffer, HostNameReq, 13);
+        int CPUNameCompare = strncmp(buffer, CPUNameReq, 13);
+        int LoadCompare = strncmp(buffer, LoadReq, 9);
+
+        if (HostNameCompare == 0)
+        {
+            send(new_socket, http, strlen(http), 0);
+        }
+        else if (CPUNameCompare == 0)
+        {
+            send(new_socket, http1, strlen(http1), 0);
+        }
+        else if (LoadCompare == 0)
+        {
+            send(new_socket, http2, strlen(http2), 0);
+        }
+        else
+        {
+            send(new_socket, http3, strlen(http3), 0);
+        }
+
+        close(new_socket);
     }
 
     return 0;
