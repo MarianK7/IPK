@@ -8,10 +8,13 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-float GetCPULoad()
+void GetCPULoad(int socket)
 {
     int a[10];
     int b[10];
+    char Load[5];
+    char daco[2] = "%";
+    int new_socket = socket;
     FILE *fp;
 
     fp = fopen("/proc/stat", "r");
@@ -34,14 +37,14 @@ float GetCPULoad()
 
     /*******************************************************************************************************************************/
 
-    int PrevIdle = a[4] + a[5];
-    int Idle = b[4] + b[5];
-    int PrevNonIdle = a[1] + a[2] + a[3] + a[6] + a[7] + a[8];
-    int NonIdle = b[1] + b[2] + b[3] + b[6] + b[7] + b[8];
-    int PrevTotal = PrevIdle + PrevNonIdle;
-    int Total = Idle + NonIdle;
-    int totald = Total - PrevTotal;
-    int idled = Idle - PrevIdle;
+    long long int PrevIdle = a[4] + a[5];
+    long long int Idle = b[4] + b[5];
+    long long int PrevNonIdle = a[1] + a[2] + a[3] + a[6] + a[7] + a[8];
+    long long int NonIdle = b[1] + b[2] + b[3] + b[6] + b[7] + b[8];
+    long long int PrevTotal = PrevIdle + PrevNonIdle;
+    long long int Total = Idle + NonIdle;
+    long long int totald = Total - PrevTotal;
+    long long int idled = Idle - PrevIdle;
 
     // printf("Totald; %d\n", totald);
     // printf("Total; %d\n", totald - idled);
@@ -55,72 +58,76 @@ float GetCPULoad()
     // printf("final: %f \n", final);
 
     // printf("CPUusage: %f \n", CPUusage);
-
-    return final;
-}
-
-int main(int argc, char *argv[])
-{
-
-    int server_fd, new_socket, valread;
-    int opt = 1;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-    char buffer[1024] = {0};
-    char *HostNameReq = "GET /hostname";
-    char *CPUNameReq = "GET /cpu-name";
-    char *LoadReq = "GET /load";
-    char *Error = "400 Bad Request\n";
-    char Load[5];
-    float cpu = GetCPULoad();
-    int cpu2 = cpu;
-    char daco[2] = "%";
-    char http[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-    char http1[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
     char http2[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-    char http3[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-    sprintf(Load, "%d", cpu2);
+    sprintf(Load, "%d", (int) final);
     strcat(Load, daco);
     strcat(Load, "\n");
     strcat(http2, Load);
-    strcat(http3, Error);
 
-    /********************************************************Hostname********************************************************************************/
-    FILE *fp;
-    char Hostname[20];
+    send(new_socket, http2, strlen(http2), 0);
 
-    fp = fopen("/proc/sys/kernel/hostname", "r");
+    // return final;
+}
 
-    fscanf(fp, "%s", Hostname);
-
-    fclose(fp);
-    /****************************************************************************************************************************************/
-
-    /********************************************************CPUname********************************************************************************/
+void GetCPUName(int socket)
+{
     FILE *fpp;
     char CPUname[1024];
+    int new_socket = socket;
 
     fpp = popen("cat /proc/cpuinfo | grep 'model name' | head -n 1 | awk -F: '{print $2}'", "r");
 
     fgets(CPUname, 1024, fpp);
 
     fclose(fpp);
-    /****************************************************************************************************************************************/
 
-    strcat(Hostname, "\n");
+    char http1[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
     strcat(http1, CPUname);
+
+    send(new_socket, http1, strlen(http1), 0);
+}
+
+void GetHostName(int socket)
+{
+    FILE *fp;
+    char Hostname[20];
+    int new_socket = socket;
+
+    fp = fopen("/proc/sys/kernel/hostname", "r");
+
+    fscanf(fp, "%s", Hostname);
+
+    fclose(fp);
+
+    char http[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    strcat(Hostname, "\n");
     strcat(http, Hostname);
-    // strcat(CPUname, "\n");
+
+    send(new_socket, http, strlen(http), 0);
+}
+
+int main(int argc, char *argv[])
+{
 
     int port = 8000;
+    int server_fd, new_socket, valread;
+    int opt = 1;
+    struct sockaddr_in address;
+    int addrlen = sizeof(address);
+    char buffer[1024] = {0};
+    char *HostNameReq = "GET /hostname ";
+    char *CPUNameReq = "GET /cpu-name ";
+    char *LoadReq = "GET /load ";
+    char *Error = "400 Bad Request\n";
+    char http3[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+
+    strcat(http3, Error);
+
+    // strcat(CPUname, "\n");
+
     if (argc > 1)
     {
         port = atoi(argv[1]);
-        // printf("Port: %d\n", port);
-    }
-    else
-    {
-        printf("No port was selected\n");
     }
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == 0)
@@ -164,21 +171,21 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-        int HostNameCompare = strncmp(buffer, HostNameReq, 13);
-        int CPUNameCompare = strncmp(buffer, CPUNameReq, 13);
-        int LoadCompare = strncmp(buffer, LoadReq, 9);
+        int HostNameCompare = strncmp(buffer, HostNameReq, 14);
+        int CPUNameCompare = strncmp(buffer, CPUNameReq, 14);
+        int LoadCompare = strncmp(buffer, LoadReq, 10);
 
         if (HostNameCompare == 0)
         {
-            send(new_socket, http, strlen(http), 0);
+            GetHostName(new_socket);
         }
         else if (CPUNameCompare == 0)
         {
-            send(new_socket, http1, strlen(http1), 0);
+            GetCPUName(new_socket);
         }
         else if (LoadCompare == 0)
         {
-            send(new_socket, http2, strlen(http2), 0);
+            GetCPULoad(new_socket);
         }
         else
         {
