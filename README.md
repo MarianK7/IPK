@@ -2,11 +2,11 @@
 
 Our goal in this project was to implement a basic server in C/C++ language which communicates trough the HTTP protocol. This server provides informations such as server cpu name, hostname and current cpu load. Server correctly processes the HTTP headers/requests and creates correct HTTP answers. Answers are in type text/plain. Communication with server can be done from web browser and also with tools like wget and curl.
 
-### Prerequisites
+## Prerequisites
 
 This server runs on Linux Ubuntu 20.04 LTS  (https://ubuntu.com/).
 
-### Written in
+## Written in
 
 * [C language](https://en.wikipedia.org/wiki/C_(programming_language))
 
