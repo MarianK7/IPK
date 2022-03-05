@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -21,8 +19,6 @@ void GetCPULoad(int socket)
 
     fscanf(fp, "%ls %d %d %d %d %d %d %d %d %d", &a[0], &a[1], &a[2], &a[3], &a[4], &a[5], &a[6], &a[7], &a[8], &a[9]);
 
-    // printf("Read String1 |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d|\n", a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
-
     fclose(fp);
 
     sleep(1);
@@ -31,33 +27,23 @@ void GetCPULoad(int socket)
 
     fscanf(fp, "%ls %d %d %d %d %d %d %d %d %d", &b[0], &b[1], &b[2], &b[3], &b[4], &b[5], &b[6], &b[7], &b[8], &b[9]);
 
-    // printf("Read String2 |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d| |%d|\n", b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9]);
-
     fclose(fp);
 
     /*******************************************************************************************************************************/
 
-    long long int PrevIdle = a[4] + a[5];
-    long long int Idle = b[4] + b[5];
-    long long int PrevNonIdle = a[1] + a[2] + a[3] + a[6] + a[7] + a[8];
-    long long int NonIdle = b[1] + b[2] + b[3] + b[6] + b[7] + b[8];
-    long long int PrevTotal = PrevIdle + PrevNonIdle;
-    long long int Total = Idle + NonIdle;
-    long long int totald = Total - PrevTotal;
-    long long int idled = Idle - PrevIdle;
+    unsigned long long int PrevIdle = a[4] + a[5];
+    unsigned long long int Idle = b[4] + b[5];
+    unsigned long long int PrevNonIdle = a[1] + a[2] + a[3] + a[6] + a[7] + a[8];
+    unsigned long long int NonIdle = b[1] + b[2] + b[3] + b[6] + b[7] + b[8];
+    unsigned long long int PrevTotal = PrevIdle + PrevNonIdle;
+    unsigned long long int Total = Idle + NonIdle;
+    unsigned long long int totald = Total - PrevTotal;
+    unsigned long long int idled = Idle - PrevIdle;
 
-    // printf("Totald; %d\n", totald);
-    // printf("Total; %d\n", totald - idled);
-
-    // float CPUusage = ((totald - idled) / totald) * 100;
     float res1 = totald - idled;
-    // printf("res1: %f \n", res1);
     float res2 = res1 / totald;
-    // printf("res2: %f \n", res2);
     float final = res2 * 100;
-    // printf("final: %f \n", final);
 
-    // printf("CPUusage: %f \n", CPUusage);
     char http2[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
     sprintf(Load, "%d", (int) final);
     strcat(Load, daco);
@@ -65,8 +51,6 @@ void GetCPULoad(int socket)
     strcat(http2, Load);
 
     send(new_socket, http2, strlen(http2), 0);
-
-    // return final;
 }
 
 void GetCPUName(int socket)
@@ -109,7 +93,7 @@ void GetHostName(int socket)
 int main(int argc, char *argv[])
 {
 
-    int port = 8000;
+    int port = 8080;
     int server_fd, new_socket, valread;
     int opt = 1;
     struct sockaddr_in address;
@@ -119,11 +103,9 @@ int main(int argc, char *argv[])
     char *CPUNameReq = "GET /cpu-name ";
     char *LoadReq = "GET /load ";
     char *Error = "400 Bad Request\n";
-    char http3[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    char http3[128] = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n";
 
     strcat(http3, Error);
-
-    // strcat(CPUname, "\n");
 
     if (argc > 1)
     {
