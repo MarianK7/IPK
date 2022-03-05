@@ -1,6 +1,6 @@
 # VUT IPK Project 1
 
-Our goal in this project was to implement a basic server in C/C++ language which communicates trough the http protocol. This server provides informations such as cpu name of the server, hostname and current cpu load. Server correctly processes the HTTP headers/requests and creates correct HTTP answers. Answers are in type text/plain. Communication with server can be done from web browser and also with tools like wget and curl.
+Our goal in this project was to implement a basic server in C/C++ language which communicates trough the HTTP protocol. This server provides informations such as cpu name of the server, hostname and current cpu load. Server correctly processes the HTTP headers/requests and creates correct HTTP answers. Answers are in type text/plain. Communication with server can be done from web browser and also with tools like wget and curl.
 
 ### Prerequisites
 
