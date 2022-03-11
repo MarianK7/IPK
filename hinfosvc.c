@@ -44,7 +44,7 @@ void GetCPULoad(int socket)
     float res2 = res1 / totald;
     float final = res2 * 100;
 
-    char http2[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    char http2[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
     sprintf(Load, "%d", (int) final);
     strcat(Load, daco);
     strcat(Load, "\n");
@@ -65,7 +65,7 @@ void GetCPUName(int socket)
 
     fclose(fpp);
 
-    char http1[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    char http1[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
     strcat(http1, CPUname);
 
     send(new_socket, http1, strlen(http1), 0);
@@ -83,7 +83,7 @@ void GetHostName(int socket)
 
     fclose(fp);
 
-    char http[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    char http[128] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
     strcat(Hostname, "\n");
     strcat(http, Hostname);
 
@@ -102,9 +102,9 @@ int main(int argc, char *argv[])
     char *HostNameReq = "GET /hostname ";
     char *CPUNameReq = "GET /cpu-name ";
     char *LoadReq = "GET /load ";
-    char *Error = "400 Bad Request\n";
-    char http3[128] = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n";
-
+    char *Error = "404 Bad Request\n";
+    char http3[128] = "HTTP/1.1 404 Bad Request\r\nContent-Type: text/plain\r\n\r\n";
+    
     strcat(http3, Error);
 
     if (argc > 1)
