@@ -35,8 +35,10 @@ $ curl http://servername:xxxx/cpu-name
 $ curl http://servername:xxxx/load
 ```
 3. Returns current load information, such as: 11%
-
-* In case of wrong or unknown header/request server returns error 404 for bad request being recieved.
+```
+$ curl http://servername:xxxx/asdf
+```
+4. In case of wrong or unknown header/request server returns error 404 for bad request being recieved.
 
 <!-- CONTACT -->
 ## Contact
