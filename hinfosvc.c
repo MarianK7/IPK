@@ -102,8 +102,8 @@ int main(int argc, char *argv[])
     char *HostNameReq = "GET /hostname ";
     char *CPUNameReq = "GET /cpu-name ";
     char *LoadReq = "GET /load ";
-    char *Error = "404 Bad Request\n";
-    char http3[128] = "HTTP/1.1 404 Bad Request\r\nContent-Type: text/plain\r\n\r\n";
+    char *Error = "400 Bad Request\n";
+    char http3[128] = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\n";
     
     strcat(http3, Error);
 
