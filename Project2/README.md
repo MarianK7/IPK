@@ -25,7 +25,7 @@ $ make - to build program
 $ ./ipk-sniffer [OPTIONS]
 ```
 
-# Options
+## Options
 
 ```
 [] - requried
@@ -38,7 +38,7 @@ $ ./ipk-sniffer [OPTIONS]
 {-h | --help} - Prints help message.
 ```
 
-# Example usage
+## Example usage
 
 ```
 $ ./ipk-sniffer -i eth0 -p 23 --tcp -n 2
@@ -50,7 +50,7 @@ $ ./ipk-sniffer -i eth0
 $ ./ipk-sniffer --help
 ```
 
-# Example sniffer output
+## Example sniffer output
 
 ```
 timestamp: 2021-03-19T18:42:52.362+01:00
@@ -71,7 +71,7 @@ dst port: 80
 0x0060:  98 9d b8 c8 00 80 0c 57  61 87 b0 cd 08 80 00 a1  .......W a.......
 ```
 
-# Project files
+## Project files
 
 ```
 ./Makefile
