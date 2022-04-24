@@ -85,6 +85,6 @@ dst port: 80
 
 Marián Keszi - xkeszi00 - xkeszi00@vutbr.cz
 
-Project Link: [https://github.com/MarianK7/IPK](https://github.com/MarianK7/IPK)
+Project Link: [https://github.com/MarianK7/IPK/tree/main/Project2](https://github.com/MarianK7/IPK/tree/main/Project2)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
