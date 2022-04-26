@@ -3,13 +3,10 @@
 #include <iostream>
 #include <pcap.h>
 #include <chrono>
-//#include <ctime>
 #include <iomanip>
 #include <signal.h>
 #include <netinet/ip.h>      
 #include <net/ethernet.h>    
-//#include <netinet/ip_icmp.h> 
-//#include <netinet/in.h>
 #include <netinet/tcp.h> 
 #include <netinet/udp.h> 
 #include <netinet/if_ether.h>
@@ -24,7 +21,7 @@ bool udp = false; // bool var for check if udp packets have to be sniffed
 bool tcp = false; // bool var for check if tcp packets have to be sniffed
 bool icmp = false; // bool var for check if icmp packets have to be sniffed
 bool arp = false; // bool var for check if arp packets have to be sniffed
-std::string portFilter = ""; // string var for port filter
+std::string protFilter = ""; // string var for protocol filter
 std::string interfaceArg = ""; // string var for interface arg
 pcap_t *device; // pcap_t var for device
 int port = -1; // int var for port
@@ -104,6 +101,12 @@ void printPacketContent(const void *addr, int len)
             buff[i % 16] = pc[i];
         buff[(i % 16) + 1] = '\0';
     }
+    while ((i % 16) != 0)
+    {
+        printf("   ");
+        i++;
+    }
+    printf("  %s", buff);
     printf("\n");
 }
 
@@ -123,43 +126,43 @@ void creaateFilter()
         if (udp)
         {
             // printf("udp and port %d\n", port);
-            portFilter += "(udp port " + std::to_string(port) + ") or ";
+            protFilter += "(udp port " + std::to_string(port) + ") or ";
         }
         if (tcp)
         {
             // printf("tcp and port %d\n", port);
-            portFilter += "(tcp port " + std::to_string(port) + ") or ";
+            protFilter += "(tcp port " + std::to_string(port) + ") or ";
         }
         if (icmp)
         {
-            portFilter += "(icmp) or (icmp6) or ";
+            protFilter += "(icmp) or (icmp6) or ";
         }
         if (arp)
         {
-            portFilter += "(arp) or ";
+            protFilter += "(arp) or ";
         }
     }
     else
     {
         if (udp)
         {
-            portFilter += "(udp) or ";
+            protFilter += "(udp) or ";
         }
         if (tcp)
         {
-            portFilter += "(tcp) or ";
+            protFilter += "(tcp) or ";
         }
         if (icmp)
         {
-            portFilter += "(icmp) or (icmp6) or ";
+            protFilter += "(icmp) or (icmp6) or ";
         }
         if (arp)
         {
-            portFilter += "(arp) or ";
+            protFilter += "(arp) or ";
         }
     }
 
-    portFilter = portFilter.substr(0, portFilter.size() - 3);
+    protFilter = protFilter.substr(0, protFilter.size() - 3);
 }
 
 // function inspired by https://www.programcreek.com/cpp/?CodeExample=get+timestamp
@@ -552,19 +555,19 @@ int main(int argc, char **argv)
         fprintf(stderr, "ERROR: Device %s is not an Ethernet device.\n", interfaceArg.c_str());
         exit(1);
     }
-    if (portFilter != "")
+    if (protFilter != "")
     {
         bpf_program filter;
-        if (pcap_compile(device, &filter, portFilter.c_str(), 0, net) == PCAP_ERROR)
+        if (pcap_compile(device, &filter, protFilter.c_str(), 0, net) == PCAP_ERROR)
         {
             pcap_close(device);
-            fprintf(stderr, "ERROR: Couldn't parse filter %s: %s\n", portFilter.c_str(), pcap_geterr(device));
+            fprintf(stderr, "ERROR: Couldn't parse filter %s: %s\n", protFilter.c_str(), pcap_geterr(device));
             exit(1);
         }
         if (pcap_setfilter(device, &filter) == PCAP_ERROR)
         {
             pcap_close(device);
-            fprintf(stderr, "ERROR: Couldn't set filter %s: %s\n", portFilter.c_str(), pcap_geterr(device));
+            fprintf(stderr, "ERROR: Couldn't set filter %s: %s\n", protFilter.c_str(), pcap_geterr(device));
             exit(1);
         }
     }
